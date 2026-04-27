@@ -81,6 +81,16 @@ pytest
 
 You can add more tests in `tests/test_recommender.py`.
 
+### Streamlit UI
+
+Launch the polished phone-style interface with:
+
+```bash
+streamlit run app.py
+```
+
+The app reuses the same scoring logic, but presents the recommendations as a mobile-inspired screen with receipt-like cards.
+
 ---
 
 ## Experiments You Tried
