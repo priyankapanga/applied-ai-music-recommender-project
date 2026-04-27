@@ -17,3 +17,35 @@ id,title,artist,genre,mood,energy,tempo_bpm,valence,danceability,acousticness
 16,Velvet Letters,Nova Rue,r&b,romantic,0.57,92,0.74,0.76,0.31
 17,Tidal Lanterns,Harbor Choir,folk,melancholic,0.33,84,0.41,0.46,0.88
 18,Victory Parade,Golden Static,orchestral,triumphant,0.83,138,0.90,0.68,0.37
+19,Afterglow Avenue,North Harbor,alt pop,wistful,0.66,112,0.69,0.72,0.24
+20,Blue Hour Station,Quiet Circuit,ambient,calm,0.24,64,0.58,0.36,0.95
+21,Neon Breakbeat,Signal Runner,edm,energized,0.94,128,0.76,0.93,0.08
+22,Paper Crowns,Juniper Vale,indie folk,reflective,0.41,88,0.55,0.49,0.82
+23,Corner Store Love,Marble Daylight,soul,warm,0.59,96,0.83,0.67,0.29
+24,Fast Lane Fever,Turbo Canvas,trap,aggressive,0.97,146,0.33,0.85,0.03
+25,Sunset Caravan,Desert Bloom,world,adventurous,0.71,104,0.78,0.71,0.47
+26,Moonlit Letters,Sable Echo,jazz,late-night,0.44,86,0.62,0.52,0.76
+27,Static Hearts,Glass Riot,punk,rebellious,0.92,160,0.39,0.74,0.11
+28,Homecoming Street,Golden Thread,acoustic,nostalgic,0.38,82,0.72,0.56,0.91
+29,Velvet Circuit,North Static,synthpop,dreamy,0.73,118,0.74,0.81,0.27
+30,Harbor Blues,Blue Lantern,blues,smoky,0.46,90,0.59,0.49,0.83
+31,Thunder Bloom,Iron Petal,metalcore,fierce,0.96,176,0.31,0.58,0.06
+32,Cosmic Hearth,Orbit House,electronic,glowing,0.84,124,0.77,0.89,0.14
+33,Quiet Revolt,Paper Riot,indie rock,restless,0.69,136,0.63,0.71,0.25
+34,Saffron Steps,Golden Loom,bossa nova,bright,0.51,104,0.85,0.64,0.67
+35,Midnight Cartography,Low Tide Atlas,trip hop,moody,0.55,92,0.47,0.61,0.78
+36,Paper Moons,Silver Verb,folk pop,comforting,0.48,98,0.82,0.59,0.73
+37,Voltage Garden,Neon Orchard,techno,driving,0.93,132,0.68,0.92,0.05
+38,Soft Launch,Daybreak Signal,r&b,smooth,0.62,88,0.79,0.77,0.34
+39,Runaway Chapel,Stone Anthem,gospel,hopeful,0.70,100,0.88,0.66,0.57
+40,Desert Mirage,Sunline Caravan,world,curious,0.58,106,0.73,0.70,0.52
+41,Flicker Frame,Afterlight Club,new wave,moody,0.67,122,0.52,0.79,0.23
+42,Marble Sprint,Quick Pulse,house,ecstatic,0.91,128,0.80,0.94,0.07
+43,Golden Threadlight,Velvet Chapel,chamber pop,serene,0.39,76,0.83,0.44,0.88
+44,Drift Signal,Mono Harbor,lofi,focused,0.41,84,0.57,0.55,0.84
+45,Wild Geometry,Arc Runner,post rock,expansive,0.77,116,0.60,0.62,0.29
+46,Cherry Street Static,Metro Bloom,indie pop,upbeat,0.74,121,0.84,0.80,0.18
+47,Night Market Riot,Crane Pulse,drill,tense,0.98,144,0.28,0.83,0.04
+48,Soft Horizon,Calico Waves,ambient,peaceful,0.26,62,0.66,0.33,0.96
+49,Sunbeam Circuit,Prism Wave,reggae,uplifting,0.63,98,0.87,0.75,0.41
+50,Final Echo,Atlas Bloom,orchestral,triumphant,0.86,140,0.91,0.69,0.36

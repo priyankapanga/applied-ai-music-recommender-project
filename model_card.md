@@ -49,7 +49,7 @@ Prompts:
 - Did you add or remove data  
 - Are there parts of musical taste missing in the dataset  
 
-There are eight songs in the catalogue. I asked copilot to generate some more data with varying genres and other features. The genres are a good mix (rock, pop, euphoric, folk, orchestral) and so are the moods(happy, chill, triumphant, moody, serene). I've used most of these features in the scoring guide as well. 
+There are 50 songs in the catalogue. I asked copilot to generate more data with varying genres and other features. The catalog now covers a broader mix of rock, pop, lofi, electronic, folk, jazz, orchestral, and other styles, along with moods like happy, chill, intense, moody, serene, and triumphant. I've used many of these features in the scoring guide as well. 
 ---
 
 ## 5. Strengths  
@@ -102,7 +102,7 @@ Prompts:
 
 No need for numeric metrics unless you created some.
 
-The first check was loading the dataset, and it loaded 18 songs, which was correct. 
+The first check was loading the dataset, and it loaded 50 songs, which was correct. 
 The second check was with the user profiles. Below are the profiles that were tested. 
 ![List of user profiles tested(dictionaries)](users.png)
 
