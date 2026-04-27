@@ -7,8 +7,10 @@ Run with:
 from __future__ import annotations
 
 from pathlib import Path
+from textwrap import dedent
 from typing import Dict, List
 
+import streamlit.components.v1 as components
 import streamlit as st
 
 from src.recommender import load_songs, recommend_songs
@@ -107,14 +109,217 @@ def pretty_score(score: float) -> str:
     return f"{score:.2f}"
 
 
-def render_receipt_card(song: Dict, score: float, reasons: str, rank: int) -> None:
+def build_phone_html(recommendations: List[tuple], fallback_profile: str) -> str:
+    if recommendations:
+        top_song, top_score, top_reasons = recommendations[0]
+        top_match_html = f"""
+            <div class="section-label">Top Match</div>
+            <div class="top-match">{top_song.get('title', 'Untitled')} by {top_song.get('artist', 'Unknown Artist')}</div>
+            <p class="utility">{top_reasons}</p>
+            <div class="chip-row">
+                <span class="chip">{top_song.get('genre', '')}</span>
+                <span class="chip">{top_song.get('mood', '')}</span>
+                <span class="chip">Score {pretty_score(top_score)}</span>
+            </div>
+        """
+        cards_html = "".join(
+            render_receipt_card(song, score, reasons, rank)
+            for rank, (song, score, reasons) in enumerate(recommendations, start=1)
+        )
+    else:
+        top_match_html = f"""
+            <div class="section-label">Top Match</div>
+            <div class="top-match">No recommendations yet</div>
+            <p class="utility">Try changing the {fallback_profile} profile in the sidebar.</p>
+        """
+        cards_html = """
+            <div class="receipt-card">
+                <p class="receipt-reasons">No recommendations were generated for the current profile.</p>
+            </div>
+        """
+
+    return dedent(
+        f"""
+        <style>
+        html, body {{
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }}
+
+        * {{ box-sizing: border-box; }}
+
+        .phone-shell {{
+            max-width: 430px;
+            margin: 0 auto;
+            padding: 0.9rem;
+            border-radius: 2rem;
+            background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.38);
+            border: 1px solid rgba(255,255,255,0.10);
+        }}
+
+        .phone-screen {{
+            background: linear-gradient(180deg, rgba(15, 20, 31, 0.95), rgba(8, 10, 17, 0.96));
+            border-radius: 1.5rem;
+            padding: 0.8rem;
+            max-height: 760px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #f4f7fb;
+        }}
+
+        .phone-notch {{
+            width: 38%;
+            height: 0.45rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.14);
+            margin: 0 auto 1rem auto;
+        }}
+
+        .now-playing {{
+            border-radius: 1.3rem;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, rgba(124,228,255,0.18), rgba(255,139,212,0.14));
+            border: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 0.75rem;
+        }}
+
+        .section-label {{
+            color: #a7b0c0;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-size: 0.72rem;
+            font-weight: 700;
+            margin-bottom: 0.65rem;
+        }}
+
+        .now-playing h2,
+        .receipt-card h3 {{
+            margin: 0.25rem 0 0.1rem 0;
+            color: #f4f7fb;
+        }}
+
+        .now-playing .subtle,
+        .receipt-artist,
+        .receipt-reasons,
+        .utility {{
+            color: #a7b0c0;
+        }}
+
+        .chip-row, .receipt-tags, .receipt-meta, .receipt-topline {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            align-items: center;
+        }}
+
+        .chip, .receipt-tags span, .receipt-topline span, .receipt-meta span {{
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 0.28rem 0.58rem;
+            font-size: 0.72rem;
+            border: 1px solid rgba(255,255,255,0.09);
+            background: rgba(255,255,255,0.06);
+            color: #f4f7fb;
+        }}
+
+        .top-match {{
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffd36e;
+        }}
+
+        .receipt-card {{
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.2rem;
+            padding: 0.85rem;
+            background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+            border: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 0.65rem;
+        }}
+
+        .receipt-card h3 {{
+            font-size: 1.02rem;
+            line-height: 1.1;
+        }}
+
+        .receipt-artist,
+        .receipt-reasons {{
+            font-size: 0.86rem;
+            line-height: 1.35;
+        }}
+
+        .receipt-tags {{ margin-top: 0.7rem; }}
+
+        .receipt-meter {{
+            height: 0.48rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            overflow: hidden;
+            margin: 0.8rem 0 0.55rem 0;
+        }}
+
+        .receipt-meter-fill {{
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #7ce4ff, #ff8bd4);
+        }}
+
+        .receipt-cutout {{
+            position: absolute;
+            top: 50%;
+            width: 0.7rem;
+            height: 0.7rem;
+            border-radius: 999px;
+            transform: translateY(-50%);
+            background: #080b12;
+            border: 1px solid rgba(255,255,255,0.08);
+        }}
+
+        .receipt-cutout-left {{ left: -0.35rem; }}
+        .receipt-cutout-right {{ right: -0.35rem; }}
+
+        .receipt-topline {{
+            justify-content: space-between;
+            margin-bottom: 0.35rem;
+        }}
+
+        .receipt-rank {{ color: #7ce4ff; font-weight: 700; }}
+        .receipt-score {{ color: #ffd36e; font-weight: 700; }}
+        </style>
+
+        <div class="phone-shell">
+            <div class="phone-screen">
+                <div class="phone-notch"></div>
+                <div class="now-playing">
+                    <div class="section-label">Now playing</div>
+                    <h2>Magic Jukebox</h2>
+                    <div class="subtle">A polished, mobile-style reveal of your top matches.</div>
+                    <div class="chip-row" style="margin-top: 0.85rem;">
+                        <span class="chip">Genre first</span>
+                        <span class="chip">Energy aware</span>
+                        <span class="chip">Receipt view</span>
+                    </div>
+                </div>
+                {top_match_html}
+                {cards_html}
+            </div>
+        </div>
+        """
+    ).strip()
+
+
+def render_receipt_card(song: Dict, score: float, reasons: str, rank: int) -> str:
     genre = song.get("genre", "")
     mood = song.get("mood", "")
     energy = float(song.get("energy", 0.0))
     tempo = int(round(float(song.get("tempo_bpm", 0.0))))
 
-    st.markdown(
-        f"""
+    return f"""
         <div class="receipt-card">
             <div class="receipt-cutout receipt-cutout-left"></div>
             <div class="receipt-cutout receipt-cutout-right"></div>
@@ -138,9 +343,7 @@ def render_receipt_card(song: Dict, score: float, reasons: str, rank: int) -> No
             </div>
             <p class="receipt-reasons">{reasons}</p>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """
 
 
 def main() -> None:
@@ -175,6 +378,41 @@ def main() -> None:
         section[data-testid="stSidebar"] {
             background: linear-gradient(180deg, rgba(15, 20, 31, 0.96), rgba(11, 15, 24, 0.96));
             border-right: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text);
+        }
+
+        section[data-testid="stSidebar"] * {
+            color: var(--text);
+        }
+
+        section[data-testid="stSidebar"] .stSelectbox label,
+        section[data-testid="stSidebar"] .stSlider label,
+        section[data-testid="stSidebar"] .stNumberInput label,
+        section[data-testid="stSidebar"] .stTextInput label,
+        section[data-testid="stSidebar"] .stRadio label,
+        section[data-testid="stSidebar"] .stMultiSelect label {
+            color: #f8fbff !important;
+            font-weight: 600;
+        }
+
+        section[data-testid="stSidebar"] .stMarkdown,
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] span,
+        section[data-testid="stSidebar"] div,
+        section[data-testid="stSidebar"] label {
+            color: #f4f7fb;
+        }
+
+        section[data-testid="stSidebar"] [data-baseweb="select"] > div,
+        section[data-testid="stSidebar"] [data-baseweb="input"] > div,
+        section[data-testid="stSidebar"] .stSlider [data-baseweb="slider"] {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(124, 228, 255, 0.22);
+        }
+
+        section[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] > div,
+        section[data-testid="stSidebar"] .stSlider [data-baseweb="slider"] [role="slider"] {
+            color: #ffffff;
         }
 
         .hero {
@@ -207,7 +445,7 @@ def main() -> None:
         }
 
         .phone-shell {
-            max-width: 430px;
+            max-width: min(430px, 100%);
             margin: 0 auto;
             padding: 0.9rem;
             border-radius: 2rem;
@@ -219,8 +457,9 @@ def main() -> None:
         .phone-screen {
             background: linear-gradient(180deg, rgba(15, 20, 31, 0.95), rgba(8, 10, 17, 0.96));
             border-radius: 1.5rem;
-            padding: 1rem;
-            min-height: 78vh;
+            padding: 0.8rem;
+            max-height: calc(100vh - 6rem);
+            overflow-y: auto;
             border: 1px solid rgba(255,255,255,0.06);
         }
 
@@ -234,10 +473,10 @@ def main() -> None:
 
         .now-playing {
             border-radius: 1.3rem;
-            padding: 1rem;
+            padding: 0.85rem;
             background: linear-gradient(135deg, rgba(124,228,255,0.18), rgba(255,139,212,0.14));
             border: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
 
         .now-playing h2,
@@ -281,10 +520,10 @@ def main() -> None:
             position: relative;
             overflow: hidden;
             border-radius: 1.2rem;
-            padding: 1rem 1rem 0.95rem 1rem;
+            padding: 0.85rem 0.85rem 0.8rem 0.85rem;
             background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
             border: 1px solid rgba(255,255,255,0.08);
-            margin-bottom: 0.85rem;
+            margin-bottom: 0.65rem;
         }
 
         .receipt-card::before {
@@ -311,7 +550,7 @@ def main() -> None:
 
         .receipt-topline {
             justify-content: space-between;
-            margin-bottom: 0.45rem;
+            margin-bottom: 0.35rem;
         }
 
         .receipt-rank {
@@ -325,6 +564,44 @@ def main() -> None:
         }
 
         .receipt-tags { margin-top: 0.7rem; }
+
+        .receipt-card h3 {
+            font-size: 1.02rem;
+            line-height: 1.1;
+        }
+
+        .receipt-artist,
+        .receipt-reasons {
+            font-size: 0.86rem;
+            line-height: 1.35;
+        }
+
+        .receipt-tags span,
+        .receipt-meta span,
+        .chip {
+            padding: 0.28rem 0.58rem;
+            font-size: 0.72rem;
+        }
+
+        .phone-screen .section-label {
+            margin-bottom: 0.5rem;
+        }
+
+        .phone-screen .top-match {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                max-width: 100%;
+                padding-left: 0.25rem;
+                padding-right: 0.25rem;
+            }
+
+            .phone-screen {
+                max-height: none;
+            }
+        }
 
         .receipt-meter {
             height: 0.48rem;
@@ -408,47 +685,8 @@ def main() -> None:
     left, right = st.columns([0.92, 1.08], gap="large")
 
     with left:
-        st.markdown(
-            """
-            <div class="phone-shell">
-                <div class="phone-screen">
-                    <div class="phone-notch"></div>
-                    <div class="now-playing">
-                        <div class="section-label">Now playing</div>
-                        <h2>Magic Jukebox</h2>
-                        <div class="subtle">A polished, mobile-style reveal of your top matches.</div>
-                        <div class="chip-row" style="margin-top: 0.85rem;">
-                            <span class="chip">Genre first</span>
-                            <span class="chip">Energy aware</span>
-                            <span class="chip">Receipt view</span>
-                        </div>
-                    </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        if recommendations:
-            top_song, top_score, top_reasons = recommendations[0]
-            st.markdown(
-                f"""
-                <div class="section-label">Top Match</div>
-                <div class="top-match">{top_song.get('title', 'Untitled')} by {top_song.get('artist', 'Unknown Artist')}</div>
-                <p class="utility">{top_reasons}</p>
-                <div class="chip-row">
-                    <span class="chip">{top_song.get('genre', '')}</span>
-                    <span class="chip">{top_song.get('mood', '')}</span>
-                    <span class="chip">Score {pretty_score(top_score)}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            for rank, (song, score, reasons) in enumerate(recommendations, start=1):
-                render_receipt_card(song, score, reasons, rank)
-        else:
-            st.info("No recommendations were generated for the current profile.")
-
-        st.markdown("</div></div>", unsafe_allow_html=True)
+        phone_html = build_phone_html(recommendations, profile_name)
+        components.html(phone_html, height=820, scrolling=True)
 
     with right:
         st.markdown("<div class='section-label'>Why this works</div>", unsafe_allow_html=True)
