@@ -1,0 +1,44 @@
+Start with a reliability-first baseline, then add UI/API after behavior is stable.
+
+1. Lock expected behavior
+- Write a short spec in README.md:
+- Input fields accepted
+- How scoring works
+- How ties are broken
+- What top-k means when k is larger than catalog size
+- What happens with bad values (missing, out-of-range, wrong type)
+
+2. Finish core logic first
+- Implement the TODO methods in recommender.py:
+- Recommender.recommend should score every song, sort deterministically, and return top k
+- Recommender.explain_recommendation should return short, human-readable reasons
+
+3. Build a testing safety net (highest ROI)
+- Expand test_recommender.py with:
+- Happy-path ranking tests
+- Edge-case tests: empty songs, k=0, k>len(songs), missing fields
+- Robustness tests for out-of-range numeric preferences
+- Determinism tests: same input always returns same order
+- Explanation tests: non-empty and includes at least one concrete reason
+
+4. Add an evaluation fixture set
+- Create a small fixed set of user profiles and expected top results (golden cases)
+- Keep this under tests so future weight changes must pass known behavior checks
+
+5. Add a quick quality script
+- In README.md, define one command sequence to run before every change:
+- tests
+- lint/format (if you add them)
+- optional smoke run of main.py
+
+6. Then add product layer
+- After tests pass consistently, build the playlist-builder UI
+- Keep recommendation logic in Python unchanged; only call it from UI/backend
+- This avoids frontend changes silently changing model behavior
+
+7. Ship in small milestones
+- Milestone 1: stable recommender + strong tests
+- Milestone 2: API endpoint for recommendations
+- Milestone 3: frontend playlist builder with explanations
+
+If you want, next I can give you a concrete Week 1 implementation checklist with exact test cases and function signatures for recommender.py.

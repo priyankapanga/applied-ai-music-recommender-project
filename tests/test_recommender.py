@@ -1,4 +1,5 @@
 from src.recommender import Song, UserProfile, Recommender
+from src.reliability_harness import HarnessCase, run_reliability_harness
 
 def make_small_recommender() -> Recommender:
     songs = [
@@ -59,3 +60,37 @@ def test_explain_recommendation_returns_non_empty_string():
     explanation = rec.explain_recommendation(user, song)
     assert isinstance(explanation, str)
     assert explanation.strip() != ""
+
+
+def test_reliability_harness_passes_on_representative_profiles():
+    rec = make_small_recommender()
+    cases = [
+        HarnessCase(
+            name="pop_happy",
+            user=UserProfile(
+                favorite_genre="pop",
+                favorite_mood="happy",
+                target_energy=0.8,
+                likes_acoustic=False,
+            ),
+            expected_top_genre="pop",
+            expected_top_mood="happy",
+        ),
+        HarnessCase(
+            name="lofi_chill",
+            user=UserProfile(
+                favorite_genre="lofi",
+                favorite_mood="chill",
+                target_energy=0.4,
+                likes_acoustic=True,
+            ),
+            expected_top_genre="lofi",
+            expected_top_mood="chill",
+        ),
+    ]
+
+    result = run_reliability_harness(rec, cases=cases, k=2)
+
+    assert result["passed"] is True
+    assert result["passed_cases"] == 2
+    assert result["issues"] == []

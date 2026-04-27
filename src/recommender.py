@@ -1,6 +1,6 @@
 import csv
+from dataclasses import asdict, dataclass
 from typing import List, Dict, Tuple, Optional
-from dataclasses import dataclass
 
 @dataclass
 class Song:
@@ -41,13 +41,31 @@ class Recommender:
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
         """Return top k songs recommended for the user."""
-        # TODO: Implement recommendation logic
-        return self.songs[:k]
+        user_prefs = self._user_profile_to_preferences(user)
+        scored_songs = [
+            (song, score_song(user_prefs, asdict(song))[0])
+            for song in self.songs
+        ]
+        ranked_songs = sorted(scored_songs, key=lambda item: item[1], reverse=True)
+        return [song for song, _ in ranked_songs[:k]]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
         """Explain why a song was recommended to the user."""
-        # TODO: Implement explanation logic
-        return "Explanation placeholder"
+        user_prefs = self._user_profile_to_preferences(user)
+        _, reasons = score_song(user_prefs, asdict(song))
+        if reasons:
+            return f"Recommended because it matches your preferences: {', '.join(reasons)}."
+        return "Recommended because it is a reasonable fit for your taste profile."
+
+    @staticmethod
+    def _user_profile_to_preferences(user: UserProfile) -> Dict[str, object]:
+        """Convert a typed profile into the dictionary shape used by score_song()."""
+        return {
+            "favorite_genre": user.favorite_genre,
+            "favorite_mood": user.favorite_mood,
+            "target_energy": user.target_energy,
+            "targetAcousticness": 0.85 if user.likes_acoustic else 0.15,
+        }
 
 def load_songs(csv_path: str) -> List[Dict]:
     """
