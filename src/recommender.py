@@ -171,6 +171,15 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
 
     return score, reasons
 
+# Sum of all weights: genre(2) + mood(1) + energy(3) + tempo(1.5) + valence(1) + danceability(1) + acousticness(1)
+_MAX_SCORE = 10.5
+
+
+def confidence_pct(score: float) -> int:
+    """Return recommendation confidence as a 0–100 integer percentage."""
+    return round(min(score / _MAX_SCORE, 1.0) * 100)
+
+
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """
     Functional implementation of the recommendation logic.

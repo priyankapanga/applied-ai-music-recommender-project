@@ -13,7 +13,7 @@ from typing import Dict, List
 import streamlit.components.v1 as components
 import streamlit as st
 
-from src.recommender import load_songs, recommend_songs
+from src.recommender import confidence_pct, load_songs, recommend_songs
 
 
 APP_TITLE = "Magic Jukebox"
@@ -119,7 +119,7 @@ def build_phone_html(recommendations: List[tuple], fallback_profile: str) -> str
             <div class="chip-row">
                 <span class="chip">{top_song.get('genre', '')}</span>
                 <span class="chip">{top_song.get('mood', '')}</span>
-                <span class="chip">Score {pretty_score(top_score)}</span>
+                <span class="chip confidence-high">{confidence_pct(top_score)}% confident</span>
             </div>
         """
         cards_html = "".join(
@@ -290,6 +290,7 @@ def build_phone_html(recommendations: List[tuple], fallback_profile: str) -> str
 
         .receipt-rank {{ color: #7ce4ff; font-weight: 700; }}
         .receipt-score {{ color: #ffd36e; font-weight: 700; }}
+        .confidence-high {{ background: rgba(124,228,255,0.18) !important; color: #7ce4ff !important; font-weight: 700; }}
         </style>
 
         <div class="phone-shell">
@@ -319,13 +320,14 @@ def render_receipt_card(song: Dict, score: float, reasons: str, rank: int) -> st
     energy = float(song.get("energy", 0.0))
     tempo = int(round(float(song.get("tempo_bpm", 0.0))))
 
+    confidence = confidence_pct(score)
     return f"""
         <div class="receipt-card">
             <div class="receipt-cutout receipt-cutout-left"></div>
             <div class="receipt-cutout receipt-cutout-right"></div>
             <div class="receipt-topline">
                 <span class="receipt-rank">#{rank}</span>
-                <span class="receipt-score">Match {pretty_score(score)}</span>
+                <span class="receipt-score">{confidence}% confident</span>
             </div>
             <h3>{song.get('title', 'Untitled')}</h3>
             <p class="receipt-artist">{song.get('artist', 'Unknown Artist')}</p>

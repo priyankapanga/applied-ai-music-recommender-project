@@ -1,4 +1,4 @@
-from src.recommender import Song, UserProfile, Recommender
+from src.recommender import Song, UserProfile, Recommender, confidence_pct
 from src.reliability_harness import HarnessCase, run_reliability_harness
 
 def make_small_recommender() -> Recommender:
@@ -29,6 +29,29 @@ def make_small_recommender() -> Recommender:
         ),
     ]
     return Recommender(songs)
+
+
+def test_confidence_pct_bounds_and_scaling():
+    assert confidence_pct(0.0) == 0
+    assert confidence_pct(10.5) == 100
+    assert confidence_pct(21.0) == 100        # clamps at 100, never exceeds it
+    pct = confidence_pct(5.25)
+    assert 48 <= pct <= 52                    # halfway score → ~50%
+
+
+def test_confidence_pct_top_recommendation_is_above_floor():
+    user = UserProfile(
+        favorite_genre="pop",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    rec = make_small_recommender()
+    top_song = rec.recommend(user, k=1)[0]
+    from src.recommender import score_song
+    from dataclasses import asdict
+    raw_score, _ = score_song(rec._user_profile_to_preferences(user), asdict(top_song))
+    assert confidence_pct(raw_score) > 0
 
 
 def test_recommend_returns_songs_sorted_by_score():
