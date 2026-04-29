@@ -6,15 +6,23 @@ Run with:
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from textwrap import dedent
 from typing import Dict, List
 
 import streamlit.components.v1 as components
 import streamlit as st
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 from src.recommender import confidence_pct, load_songs, recommend_songs, Song, Recommender
 from src.reliability_harness import run_reliability_harness, default_harness_cases
+
+load_dotenv()
+_gemini_key = os.getenv("GEMINI_API_KEY", "")
+_gemini_client = genai.Client(api_key=_gemini_key) if _gemini_key and _gemini_key != "your_api_key_here" else None
 
 
 APP_TITLE = "Magic Jukebox"
@@ -90,6 +98,41 @@ def get_harness_result() -> Dict:
     return run_reliability_harness(rec, cases=default_harness_cases())
 
 
+def build_catalog_context(songs: List[Dict]) -> str:
+    lines = [
+        f"- \"{s['title']}\" by {s['artist']} | genre: {s['genre']} | mood: {s['mood']} | "
+        f"energy: {s['energy']} | tempo: {s['tempo_bpm']} BPM | valence: {s['valence']} | "
+        f"danceability: {s['danceability']} | acousticness: {s['acousticness']}"
+        for s in songs
+    ]
+    return "\n".join(lines)
+
+
+def ask_gemini(user_message: str, songs: List[Dict], history: List[Dict]) -> str:
+    if not _gemini_client:
+        return "No Gemini API key found. Add your key to the .env file to use the chatbot."
+    catalog = build_catalog_context(songs)
+    system_prompt = (
+        "You are Magic Jukebox, a friendly music recommendation assistant. "
+        "You have access to the following song catalog — ONLY recommend songs from this list:\n\n"
+        f"{catalog}\n\n"
+        "Always recommend exactly 3 songs unless the user asks for a different number. "
+        "For each recommendation, briefly explain why it matches what the user asked for. "
+        "If nothing in the catalog fits well, say so honestly rather than forcing a match."
+    )
+    gemini_history = [
+        types.Content(role=m["role"], parts=[types.Part(text=m["content"])])
+        for m in history
+    ]
+    chat = _gemini_client.chats.create(
+        model="gemini-2.5-flash",
+        config=types.GenerateContentConfig(system_instruction=system_prompt),
+        history=gemini_history,
+    )
+    response = chat.send_message(user_message)
+    return response.text
+
+
 def build_preferences(
     favorite_genre: str,
     favorite_mood: str,
@@ -118,7 +161,11 @@ def pretty_score(score: float) -> str:
     return f"{score:.2f}"
 
 
-def build_phone_html(recommendations: List[tuple], fallback_profile: str) -> str:
+def build_phone_html(
+    recommendations: List[tuple],
+    fallback_profile: str,
+    blocked_message: str | None = None,
+) -> str:
     if recommendations:
         top_song, top_score, top_reasons = recommendations[0]
         top_match_html = f"""
@@ -135,6 +182,17 @@ def build_phone_html(recommendations: List[tuple], fallback_profile: str) -> str
             render_receipt_card(song, score, reasons, rank)
             for rank, (song, score, reasons) in enumerate(recommendations, start=1)
         )
+    elif blocked_message:
+        top_match_html = f"""
+            <div class="section-label">Recommendations Paused</div>
+            <div class="top-match">Reliability safeguard is active</div>
+            <p class="utility">{blocked_message}</p>
+        """
+        cards_html = """
+            <div class="receipt-card">
+                <p class="receipt-reasons">Recommendations are temporarily blocked until reliability checks pass.</p>
+            </div>
+        """
     else:
         top_match_html = f"""
             <div class="section-label">Top Match</div>
@@ -696,33 +754,82 @@ def main() -> None:
         st.markdown("<div class='section-label'>Selected profile</div>", unsafe_allow_html=True)
         st.json({"profile": profile_name, **prefs})
 
-    recommendations = recommend_songs(prefs, songs, k=k)
+    tab1, tab2 = st.tabs(["Recommender", "Chat with Jukebox"])
 
-    left, right = st.columns([0.92, 1.08], gap="large")
+    with tab1:
+        reliability_block_message = None
+        if harness["passed"]:
+            recommendations = recommend_songs(prefs, songs, k=k)
+        else:
+            recommendations = []
+            reliability_block_message = (
+                "We paused recommendations because the reliability harness reported issues. "
+                "Please review System health in the sidebar and fix failing checks before generating playlists."
+            )
 
-    with left:
-        phone_html = build_phone_html(recommendations, profile_name)
-        components.html(phone_html, height=820, scrolling=True)
+        left, right = st.columns([0.92, 1.08], gap="large")
 
-    with right:
-        st.markdown("<div class='section-label'>Why this works</div>", unsafe_allow_html=True)
-        st.write("Magic Jukebox gives you curated song recommendations depending on your profile. You can adjust this to see how the song recommendations change.")
-        st.markdown(
-            """
-            <div class="receipt-card">
-                <div class="section-label">Profile Snapshot</div>
-                <p class="receipt-reasons">
-                    Genre, mood, energy, tempo, valence, danceability, and acousticness all influence the ranking in different ways.
-                    The playlist shows the songs and how exactly they match your preferences.
-                    That makes the results feel more like a curated set instead of a plain list.
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        with left:
+            phone_html = build_phone_html(
+                recommendations,
+                profile_name,
+                blocked_message=reliability_block_message,
+            )
+            components.html(phone_html, height=820, scrolling=True)
 
-        st.markdown("<div class='section-label'>Current preferences</div>", unsafe_allow_html=True)
-        st.json(prefs)
+        with right:
+            st.markdown("<div class='section-label'>Why this works</div>", unsafe_allow_html=True)
+            if reliability_block_message:
+                st.error(reliability_block_message)
+                st.write(
+                    "While the safeguard is active, update the recommender logic until reliability checks pass. "
+                    "Recommendations will automatically resume once the harness is healthy."
+                )
+            else:
+                st.write("Magic Jukebox gives you curated song recommendations depending on your profile. You can adjust this to see how the song recommendations change.")
+            st.markdown(
+                """
+                <div class="receipt-card">
+                    <div class="section-label">Profile Snapshot</div>
+                    <p class="receipt-reasons">
+                        Genre, mood, energy, tempo, valence, danceability, and acousticness all influence the ranking in different ways.
+                        The playlist shows the songs and how exactly they match your preferences.
+                        That makes the results feel more like a curated set instead of a plain list.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            st.markdown("<div class='section-label'>Current preferences</div>", unsafe_allow_html=True)
+            st.json(prefs)
+
+    with tab2:
+        st.markdown("### Chat with Magic Jukebox")
+        st.caption("Describe what you're in the mood for and I'll find songs from the catalog for you.")
+
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
+
+        for msg in st.session_state.chat_history:
+            with st.chat_message(msg["role"]):
+                if msg["role"] == "model":
+                    st.markdown(f"<p style='color:#f4f7fb; font-size:1rem; line-height:1.6;'>{msg['content']}</p>", unsafe_allow_html=True)
+                else:
+                    st.write(msg["content"])
+
+        user_input = st.chat_input("e.g. something chill for studying...")
+        if user_input:
+            st.session_state.chat_history.append({"role": "user", "content": user_input})
+            with st.chat_message("user"):
+                st.write(user_input)
+
+            with st.chat_message("assistant"):
+                with st.spinner("Finding songs..."):
+                    reply = ask_gemini(user_input, songs, st.session_state.chat_history[:-1])
+                st.markdown(f"<p style='color:#f4f7fb; font-size:1rem; line-height:1.6;'>{reply}</p>", unsafe_allow_html=True)
+
+            st.session_state.chat_history.append({"role": "model", "content": reply})
 
 
 if __name__ == "__main__":
