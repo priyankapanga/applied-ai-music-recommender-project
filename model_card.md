@@ -160,4 +160,6 @@ Prompts:
 
 This was a really interesting project! It was a little confusing to me before how Spotify and Youtube were converting matches into scores, so it was nice to see a starter version of it. Something unexpected was acousticness and other components/features I didn't think about that Copilot and the README+datset suggested. The weights and importance of them was really interesting and valuable to learn about as well. Weights, even small tweaks, can change a lot of things. Thinking about this scoring guide really changes the way I view the music recommendation apps, because I started thinking about how things like adding a song, how long I wait before skip can be used to keep changing the user preferences. Each time I add a song to my liked list or make a new playlist, I'll probably think about how it changes what music the app recommends to me next time.
 
+I used AI to improve my system design and debugging, and it caught where I oversimplified. One thing it did a little wrong though was including functionality that didn't really affect how the logic worked- it would just display both. So, I worked on fixing that. 
+
 This was a really nice assignment, it was very enjoyable too. Thank you!
