@@ -54,6 +54,48 @@ def test_confidence_pct_top_recommendation_is_above_floor():
     assert confidence_pct(raw_score) > 0
 
 
+def test_recommendations_ordered_by_confidence_descending():
+    user = UserProfile(
+        favorite_genre="pop",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    rec = make_small_recommender()
+    from src.recommender import score_song
+    from dataclasses import asdict
+    results = rec.recommend(user, k=2)
+    scores = [
+        score_song(rec._user_profile_to_preferences(user), asdict(song))[0]
+        for song in results
+    ]
+    confidences = [confidence_pct(s) for s in scores]
+    assert confidences == sorted(confidences, reverse=True)
+
+
+def test_recommend_k_larger_than_catalog_returns_all_songs():
+    rec = make_small_recommender()
+    user = UserProfile(
+        favorite_genre="pop",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    results = rec.recommend(user, k=100)
+    assert len(results) == len(rec.songs)
+
+
+def test_recommend_empty_catalog_returns_empty_list():
+    rec = Recommender([])
+    user = UserProfile(
+        favorite_genre="pop",
+        favorite_mood="happy",
+        target_energy=0.8,
+        likes_acoustic=False,
+    )
+    assert rec.recommend(user, k=5) == []
+
+
 def test_recommend_returns_songs_sorted_by_score():
     user = UserProfile(
         favorite_genre="pop",

@@ -13,8 +13,7 @@ from typing import Dict, List
 import streamlit.components.v1 as components
 import streamlit as st
 
-from src.recommender import confidence_pct, load_songs, recommend_songs, Song, Recommender
-from src.reliability_harness import run_reliability_harness, default_harness_cases
+from src.recommender import confidence_pct, load_songs, recommend_songs
 
 
 APP_TITLE = "Magic Jukebox"
@@ -80,14 +79,6 @@ st.set_page_config(
 @st.cache_data
 def get_songs() -> List[Dict]:
     return load_songs(str(DATA_PATH))
-
-
-@st.cache_data
-def get_harness_result() -> Dict:
-    songs_dicts = load_songs(str(DATA_PATH))
-    songs = [Song(**d) for d in songs_dicts]
-    rec = Recommender(songs)
-    return run_reliability_harness(rec, cases=default_harness_cases())
 
 
 def build_preferences(
@@ -308,8 +299,12 @@ def build_phone_html(recommendations: List[tuple], fallback_profile: str) -> str
                 <div class="now-playing">
                     <div class="section-label">Now playing</div>
                     <h2>Magic Jukebox</h2>
-                    <div class="subtle">Find your top matches below.</div>
-        
+                    <div class="subtle">A polished, mobile-style reveal of your top matches.</div>
+                    <div class="chip-row" style="margin-top: 0.85rem;">
+                        <span class="chip">Genre first</span>
+                        <span class="chip">Energy aware</span>
+                        <span class="chip">Receipt view</span>
+                    </div>
                 </div>
                 {top_match_html}
                 {cards_html}
@@ -641,9 +636,10 @@ def main() -> None:
         """
         <div class="hero">
             <div class="eyebrow">Magic Jukebox</div>
-            <h1> Magic Jukebox: The playlist that screams <span style="font-family: Georgia, serif; font-style: italic;">you</span></h1>
+            <h1>A recommendation app that feels like a polished phone screen.</h1>
             <p>
-                Select your favorite features and your preferred style on the left sidebar, and let the magic jukebox do its thing!
+                Tune the vibe in the sidebar, then explore the highest-scoring songs in a tall, mobile-style
+                layout with score chips, explanation snippets, and a receipt-like rhythm to the cards.
             </p>
         </div>
         """,
@@ -653,16 +649,6 @@ def main() -> None:
     with st.sidebar:
         st.title("Control Panel")
         st.caption("Adjust the vibe and let the harnessed recommender rank the catalog.")
-
-        harness = get_harness_result()
-        if harness["passed"]:
-            st.success("Reliability and correctness checks passed")
-        else:
-            st.warning(
-                f"System health: {harness['passed_cases']}/{harness['total_cases']} passed\n\n"
-                + "\n".join(f"• {issue}" for issue in harness["issues"])
-            )
-        st.divider()
         profile_name = st.selectbox("User profile", list(PROFILE_PRESETS.keys()), index=0)
         preset = resolve_profile(profile_name)
 
@@ -706,14 +692,18 @@ def main() -> None:
 
     with right:
         st.markdown("<div class='section-label'>Why this works</div>", unsafe_allow_html=True)
-        st.write("Magic Jukebox gives you curated song recommendations depending on your profile. You can adjust this to see how the song recommendations change.")
+        st.write(
+            "The UI is intentionally built to feel like a modern phone app: a focused hero, a compact top-match strip, and receipt-style cards that make the reasons easy to scan."
+        )
+        st.write(
+            "Because the data and scoring live in src/recommender.py, the visual layer stays thin. That makes it easy to keep the design pretty without hiding how the recommendations are computed."
+        )
         st.markdown(
             """
             <div class="receipt-card">
                 <div class="section-label">Profile Snapshot</div>
                 <p class="receipt-reasons">
-                    Genre, mood, energy, tempo, valence, danceability, and acousticness all influence the ranking in different ways.
-                    The playlist shows the songs and how exactly they match your preferences.
+                    Genre, mood, energy, tempo, valence, danceability, and acousticness all influence the ranking.
                     That makes the results feel more like a curated set instead of a plain list.
                 </p>
             </div>

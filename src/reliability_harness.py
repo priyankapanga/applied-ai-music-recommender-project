@@ -81,10 +81,16 @@ def run_reliability_harness(
         recommendations = recommender.recommend(case.user, k=k)
         expected_top = ranked_songs[0] if ranked_songs else None
 
+        repeated_runs = [
+            [s.id for s in recommender.recommend(case.user, k=k)]
+            for _ in range(3)
+        ]
         case_issues: List[str] = []
         if not recommendations:
             case_issues.append("returned no recommendations")
         else:
+            if len(set(map(tuple, repeated_runs))) != 1:
+                case_issues.append("not reliable in all runs")
             if len({song.id for song in recommendations}) != len(recommendations):
                 case_issues.append("returned duplicate songs")
 
