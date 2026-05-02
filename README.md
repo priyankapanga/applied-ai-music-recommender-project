@@ -84,4 +84,4 @@ I learned about the importance of when you test, and to include it in your progr
 Project Demo Link: https://drive.google.com/file/d/1EkD0dwoBewQ1nLCWrrywQRoUaA35P807/view?usp=sharing
 
 
-This taught me that even with AI, we should design a clear vision for the app, and then take it's help, instead of jumping into suggesions. I liked that we had free reign with what this project could turn into, and that taught me more about taking ownership of your project and trying to make it interesting and fun. Thank you for this project:D !
+This taught me that even with AI, we should design a clear vision for the app, and then take its help, instead of jumping into suggesions. I liked that we had free reign with what this project could turn into, and that taught me more about taking ownership of your project and trying to make it interesting and fun. Thank you for this project:D !
